@@ -1,9 +1,21 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-   // id 'com.github.dcendents.android-maven'
+    id 'maven-publish'
 }
 
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release          // 表示发布 release（jitpack 都不会使用到）
+                groupId = 'com.cgzou.serialport'  // 这个是依赖库的组 id
+                artifactId = 'serialport'       // 依赖库的名称（jitpack 都不会使用到）
+                version = "1.0.1"                //当前版本依赖库版本号，这个jitpack不会使用到，只是我们开发者自己查看
+            }
+        }
+    }
+}
 android {
     namespace 'com.cgzou.serialport'
     compileSdk 33
