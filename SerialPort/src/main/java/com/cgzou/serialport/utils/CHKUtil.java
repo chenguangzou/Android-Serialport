@@ -87,6 +87,7 @@ public class CHKUtil {
         }
         return chk;
     }
+
     public static  byte readChk(List<Byte> subList)
     {
         int len = subList.size();
@@ -110,6 +111,22 @@ public class CHKUtil {
             return chk ;
         }
         return 0;
+    }
+
+
+    /**
+     * 计算累加和校验码（简单求和取低8位）
+     *
+     * @return 校验码
+     */
+    public static String calculateCheckSum(String content) {
+
+        byte[] data =  Hex2Utils.hexToBytes(content);
+        int sum = 0;
+        for (byte b : data) {
+            sum += b & 0xFF;
+        }
+        return String.format("%02X", sum & 0xFF);
     }
 
 }

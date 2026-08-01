@@ -1,8 +1,7 @@
 package com.cgzou.serialport.helper
 
-import android.util.Log
-import com.cgzou.serialport.interfaces.OnReadSerialDataListener
 import com.cgzou.serialport.utils.Hex2Utils
+import com.cgzou.serialport.utils.LogUtil
 
 /**
  *
@@ -16,17 +15,23 @@ abstract class BufferParse {
     private val tag = "BufferParse"
 
     // hex字符串大写缓存
-    private var buffer = StringBuffer()
+    protected var buffer = StringBuffer()
 
     // 缓存大小
-    private val bufferSize = 1024
+    protected var bufferSize = 1024
 
     // 帧头，可用来过滤数据
-    private var frameHeader = ""
+    protected var frameHeader = ""
+
+    // 帧头，可用来过滤数据
+    protected var minSize = 0
 
     // 是否开始解析默认解析
-    private var isParse = true
+    protected var isParse = true
 
+    protected var mLastReceiveTime: Long = 0L
+
+    protected var mOutTime: Long = 6*1000L
 
     /**
      * 1.解析数据
@@ -58,16 +63,27 @@ abstract class BufferParse {
      * @param size Int             数据长度
      */
     private fun putCache(bytes: ByteArray?, size: Int) {
-        if (!isParse) {    //是否开始解析
+        timeOutClean()
+        // 是否开始解析
+        if (!isParse) {
             return
         }
         if (bytes != null) {
             val data = Hex2Utils.bytesToHexString(bytes, size)
             buffer.append(data)
             if (buffer.length > bufferSize) {
-                Log.w(tag, "清理过多数据...")
+                LogUtil.w(tag, "清理过多数据...")
                 buffer.setLength(0)
             }
+        }
+    }
+
+    private fun timeOutClean() {
+        val curTime = System.currentTimeMillis()
+        if (curTime - mLastReceiveTime > mOutTime) {
+            mLastReceiveTime = System.currentTimeMillis()
+            LogUtil.e(tag, "超时清理缓存")
+            buffer.delete(0,buffer.length)
         }
     }
 
@@ -80,7 +96,7 @@ abstract class BufferParse {
             val stringBuilder = StringBuilder()
             stringBuilder.append("移除多余数据：")
             stringBuilder.append(index)
-            Log.d(tag, stringBuilder.toString())
+            LogUtil.d(tag, stringBuilder.toString())
         }
         buffer.delete(0, index)
     }
@@ -92,5 +108,6 @@ abstract class BufferParse {
     fun stopParse() {
         isParse = false
     }
+
 
 }

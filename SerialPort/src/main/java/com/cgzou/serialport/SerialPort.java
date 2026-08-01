@@ -58,7 +58,7 @@ public class SerialPort {
      */
     public SerialPort(SerialParam param) throws SecurityException, IOException {
         if (param != null) {
-            OpenSerialPort(param.getDevice(), param.getSuFilePath(), param.getBaudRate(), param.getParity(), param.getDataBits(), param.getStopBit(), param.getFlowCon(), param.getBlock(), param.getClosePort(),param.getFlags());
+            OpenSerialPort(param.getFile(), param.getSuFilePath(), param.getBaudRate(), param.getParity(), param.getDataBits(), param.getStopBit(), param.getFlowCon(), param.getBlock(), param.getClosePort(),param.getFlags());
         }
     }
 
@@ -172,6 +172,7 @@ public class SerialPort {
     public void setOpen(boolean open) {
         isOpen = open;
     }
+
 
     /**
      * 串口波特率定义

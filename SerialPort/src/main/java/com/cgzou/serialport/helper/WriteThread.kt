@@ -1,8 +1,7 @@
 package com.cgzou.serialport.helper
 
-import android.os.SystemClock
-import android.util.Log
 import com.cgzou.serialport.utils.Hex2Utils
+import com.cgzou.serialport.utils.LogUtil
 import java.io.IOException
 import java.io.OutputStream
 import java.util.concurrent.ArrayBlockingQueue
@@ -59,14 +58,17 @@ class WriteThread(time: Long, outputStream: OutputStream?) : Thread() {
                 val stringBuilder = StringBuilder()
                 stringBuilder.append("发送串口数据: ")
                 stringBuilder.append(bytes.size)
-                Log.d(tag, stringBuilder.toString() + "," + Hex2Utils.bytes2HexString(bytes, bytes.size))
+                LogUtil.d(
+                    tag,
+                    stringBuilder.toString() + "," + Hex2Utils.bytesToHex2String(bytes, bytes.size)
+                )
                 mOutputStream!!.write(bytes)
                 mOutputStream!!.flush()
-                Log.d(tag, "===========发送串口数据结束============")
+                LogUtil.d(tag, "===========发送串口数据结束============")
                 return true
             } catch (e: IOException) {
                 e.printStackTrace();
-                Log.d(tag, "===========发送串口数据异常============")
+                LogUtil.d(tag, "===========发送串口数据异常============")
             }
         }
         return false
@@ -75,7 +77,7 @@ class WriteThread(time: Long, outputStream: OutputStream?) : Thread() {
     override fun run() {
         super.run()
         if (!isWrite) {
-            Log.d(tag, "停止写数据...")
+            LogUtil.d(tag, "停止写数据...")
             return
         }
         while (!isInterrupted) {
@@ -92,7 +94,7 @@ class WriteThread(time: Long, outputStream: OutputStream?) : Thread() {
                 sleep(runOnceTime)
             } catch (e: Exception) {
                 e.printStackTrace()
-                Log.d(tag, "串口通讯异常，尝试重启")
+                LogUtil.d(tag, "串口通讯异常，尝试重启")
                 e.printStackTrace()
                 return
             }

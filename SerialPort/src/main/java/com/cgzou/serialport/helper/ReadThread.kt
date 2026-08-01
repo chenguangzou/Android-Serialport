@@ -1,8 +1,8 @@
 package com.cgzou.serialport.helper
 
 import android.os.SystemClock
-import android.util.Log
 import com.cgzou.serialport.utils.Hex2Utils
+import com.cgzou.serialport.utils.LogUtil
 import java.io.BufferedInputStream
 import java.nio.ByteBuffer
 
@@ -14,7 +14,7 @@ import java.nio.ByteBuffer
  * @Version: 1.0
  */
 
-class  ReadThread :Thread(){
+class  ReadThread : Thread(){
 
     private val tag = "ReadThread"
     private var byteBufferLength = 256
@@ -30,7 +30,7 @@ class  ReadThread :Thread(){
     override fun run() {
         super.run()
         if (!isRead) {
-            Log.d(tag, "读取线程停止读取数据...")
+            LogUtil.d(tag, "读取线程停止读取数据...")
             return
         }
         while (!isInterrupted) {
@@ -44,7 +44,7 @@ class  ReadThread :Thread(){
                             SystemClock.sleep(readTime)
                             val buffer = ByteArray(read)
                             System.arraycopy(rxArray, 0, buffer, 0, read)
-                            Log.d(tag, "数据长度:"+buffer.size+"接受数据："+ Hex2Utils.bytes2HexString(buffer,buffer.size))
+                            LogUtil.d(tag, "数据长度:"+buffer.size+"接受数据："+ Hex2Utils.bytesToHex2String(buffer,buffer.size))
                             // LogUtil.i(tag, "数据长度:"+buffer.size+"接受数据："+String(buffer))
                             rxBuffer.clear()
                             // readDataListener?.onReadData(buffer, read)
@@ -57,7 +57,7 @@ class  ReadThread :Thread(){
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Log.d(tag,"串口通讯异常，尝试重启")
+                LogUtil.d(tag,"串口通讯异常，尝试重启")
                 e.printStackTrace()
                 // sendBroadcast(Intent(Constant.BROADCAST_SERIAL_ERROR))
                 //reopenSerial()
