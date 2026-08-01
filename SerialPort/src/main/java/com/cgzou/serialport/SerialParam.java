@@ -11,7 +11,7 @@ import java.io.File;
 public class SerialParam {
 
     // 串口设备文件
-    private File device = null;
+    private File file = null;
 
     // su文件的系统位置
     private String suFilePath = null;
@@ -44,7 +44,7 @@ public class SerialParam {
      * @method       com.cgzou.serialport.SerialPort
      * @description  创建串口对象
      * @author:      chenguangzou
-     * @param device       串口设备文件
+     * @param file       串口设备文件
      * @param suFilePath   su文件的系统位置
      * @param baudRate     波特率，一般是9600
      * @param parity       奇偶校验，0 None, 1 Odd, 2 Even
@@ -57,8 +57,8 @@ public class SerialParam {
      * @return
      * @@date              2024/10/16 14:18
      */
-    public SerialParam(File device, String suFilePath, int baudRate, int parity, int dataBits, int stopBit, int flowCon, int block, int closePort, int flags) {
-        this.device = device;
+    public SerialParam(File file, String suFilePath, int baudRate, int parity, int dataBits, int stopBit, int flowCon, int block, int closePort, int flags) {
+        this.file = file;
         this.suFilePath = suFilePath;
         this.baudRate = baudRate;
         this.parity = parity;
@@ -70,36 +70,36 @@ public class SerialParam {
         this.flags = flags;
     }
 
-    public SerialParam(File device, String suFilePath, int baudRate, int flags) {
-        this.device = device;
+    public SerialParam(File file, String suFilePath, int baudRate, int flags) {
+        this.file = file;
         this.suFilePath = suFilePath;
         this.baudRate = baudRate;
         this.flags = flags;
     }
 
-    public SerialParam(File device, String suFilePath, int baudRate) {
-        this.device = device;
+    public SerialParam(File file, String suFilePath, int baudRate) {
+        this.file = file;
         this.suFilePath = suFilePath;
         this.baudRate = baudRate;
     }
 
-    public SerialParam(File device, int baudRate, int flags) {
-        this.device = device;
+    public SerialParam(File file, int baudRate, int flags) {
+        this.file = file;
         this.baudRate = baudRate;
         this.flags = flags;
     }
 
-    public SerialParam(File device, int baudRate) {
-        this.device = device;
+    public SerialParam(File file, int baudRate) {
+        this.file = file;
         this.baudRate = baudRate;
     }
 
-    public File getDevice() {
-        return device;
+    public File getFile() {
+        return file;
     }
 
-    public void setDevice(File device) {
-        this.device = device;
+    public void setFile(File file) {
+        this.file = file;
     }
 
     public String getSuFilePath() {

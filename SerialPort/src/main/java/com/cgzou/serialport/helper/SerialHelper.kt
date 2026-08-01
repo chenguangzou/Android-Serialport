@@ -1,18 +1,20 @@
 package com.cgzou.serialport.helper
 
 import android.os.SystemClock
-import android.util.Log
 import com.cgzou.serialport.SerialParam
 import com.cgzou.serialport.SerialPort
 import com.cgzou.serialport.SerialPortFinder
 import com.cgzou.serialport.interfaces.OnReadSerialDataListener
 import com.cgzou.serialport.utils.Hex2Utils
+import com.cgzou.serialport.utils.LogUtil
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.ByteBuffer
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * 串口帮助类
@@ -23,17 +25,21 @@ import java.nio.ByteBuffer
  */
 class SerialHelper {
 
-    private val tag = "SerialPortHelper"
+    private val tag = javaClass.simpleName
 
     private var mReadThread: ReadThread? = null
 
-    private var mWriteThread: WriteThread? = null
+    var mWriteThread: WriteThread? = null
+
+    private var mSendPool: ExecutorService? = null
+
+    private var mRunnable: SendRunnable? = null
 
     private var mSerialPort: SerialPort? = null
 
-    private var mInputStream: InputStream? = null
+    var mInputStream: InputStream? = null
 
-    private var mOutputStream: OutputStream? = null
+    var mOutputStream: OutputStream? = null
 
     private var mBufferedInputStream: BufferedInputStream? = null
 
@@ -65,6 +71,7 @@ class SerialHelper {
 
     var bufferParse: BufferParse? = null
 
+
     fun openSerial(port: String, baudRate: Int) {
         mPort = port
         openSerial(SerialParam(File(mPort), baudRate))
@@ -83,12 +90,15 @@ class SerialHelper {
                 mBufferedInputStream = BufferedInputStream(mInputStream)
             }
             startReadThread()
-            startWriteThread()
+            // startWriteThread()
             isOpen = mSerialPort!!.isOpen
-            Log.d(tag, ("开启串口成功 " + param.device.absolutePath + " 波特率 " + param.baudRate))
+            LogUtil.d(
+                tag,
+                ("开启串口成功 " + param.file.absolutePath + " 波特率 " + param.baudRate)
+            )
         } catch (e: java.lang.Exception) {
-            Log.e(tag, "open serial failed")
-            Log.d(tag, "开启串口失败 " + param.device.absolutePath + " 波特率 " + param.baudRate)
+            LogUtil.e(tag, "open serial failed")
+            LogUtil.d(tag, "开启串口失败 " + param.file.absolutePath + " 波特率 " + param.baudRate)
             e.printStackTrace()
             // sendBroadcast(Intent(Constant.BROADCAST_SERIAL_ERROR))
         }
@@ -107,26 +117,18 @@ class SerialHelper {
                 val stringBuilder = StringBuilder()
                 stringBuilder.append("发送串口数据: ")
                 stringBuilder.append(bytes.size)
-                stringBuilder.append( "," + Hex2Utils.bytes2HexString(bytes, bytes.size))
-                Log.d(tag, stringBuilder.toString() )
-                Log.d(tag, "===========发送串口数据结束============")
+                stringBuilder.append("," + Hex2Utils.bytesToHex2String(bytes, bytes.size))
+                LogUtil.d(tag, stringBuilder.toString())
+                LogUtil.d(tag, "===========发送串口数据结束============")
                 return true
             } catch (e: IOException) {
                 e.printStackTrace();
-                Log.d(tag, "===========发送串口数据异常============")
+                LogUtil.d(tag, "===========发送串口数据异常============")
             }
         }
         return false
     }
 
-    /**
-     * 获取设备路径列表
-     * @return Array<String>
-     */
-    fun getDevicePaths(): Array<String> {
-        val spFinder: SerialPortFinder = SerialPortFinder()
-        return spFinder.allDevicesPath
-    }
 
     /**
      * 使用写线程发送数据
@@ -134,6 +136,32 @@ class SerialHelper {
      */
     fun sendByQueue(bytes: ByteArray) {
         mWriteThread?.putQueue(bytes)
+    }
+
+    /**
+     * 使用线程池发送数据
+     * @param runnable 自定义Runnable
+     */
+    fun send(runnable: Runnable) {
+        if (mSendPool == null) {
+            mSendPool = Executors.newSingleThreadExecutor()
+        }
+        mSendPool?.execute(runnable)
+    }
+
+    /**
+     * 使用线程池发送数据,内置的Runnable
+     * @param bytes
+     */
+    fun sendByRunnable(bytes: ByteArray) {
+        if (mSendPool == null) {
+            mSendPool = Executors.newSingleThreadExecutor()
+        }
+        if (mRunnable == null) {
+            mRunnable = SendRunnable()
+        }
+        mRunnable!!.bytes = bytes
+        mSendPool?.execute(mRunnable)
     }
 
     private fun closeReadThread() {
@@ -162,7 +190,7 @@ class SerialHelper {
         }
     }
 
-    private fun startWriteThread() {
+    fun startWriteThread() {
         if (mWriteThread == null) {
             mWriteThread = WriteThread(10L, mOutputStream)
             mWriteThread!!.start()
@@ -178,7 +206,7 @@ class SerialHelper {
         }
     }
 
-    private fun closeWriteThread() {
+    fun closeWriteThread() {
         if (mWriteThread != null && mWriteThread!!.isAlive) {
             mWriteThread!!.stopWrite()
             if (!mWriteThread!!.isInterrupted) {
@@ -190,6 +218,7 @@ class SerialHelper {
 
     fun closeSerial() {
         try {
+
             closeReadThread()
             closeWriteThread()
             if (mSerialPort != null) {
@@ -197,29 +226,36 @@ class SerialHelper {
                 mSerialPort = null
                 isOpen = false
             }
-            if (mBufferedInputStream != null) {
-                mBufferedInputStream!!.close()
-                mBufferedInputStream = null
-            }
-            if (mInputStream != null) {
-                mInputStream!!.close()
-                mInputStream = null
-            }
-            if (mOutputStream != null) {
-                mOutputStream!!.close()
-                mOutputStream = null
-            }
+            mBufferedInputStream?.close()
+            mBufferedInputStream = null
+            mInputStream?.close()
+            mInputStream = null
+            mOutputStream?.close()
+            mOutputStream = null
+            mSendPool?.shutdownNow()
+            mSendPool = null
+
             rxBuffer.clear()
+
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
+
+    /**
+     * 获取设备路径列表
+     * @return Array<String>
+     */
+    fun getDevicePaths(): Array<String> {
+        val spFinder: SerialPortFinder = SerialPortFinder()
+        return spFinder.allDevicesPath
     }
 
     private inner class ReadThread : Thread() {
         override fun run() {
             super.run()
             if (!isRead) {
-                Log.d(tag, "串口读取线程停止读取数据...")
+                LogUtil.d(tag, "串口读取线程停止读取数据...")
                 return
             }
             while (!isInterrupted) {
@@ -244,7 +280,7 @@ class SerialHelper {
                         sleep(runOnceTime)
                     }
                 } catch (e: Exception) {
-                    Log.e(tag, "串口通讯异常，尝试重启")
+                    LogUtil.e(tag, "串口通讯异常，尝试重启")
                     e.printStackTrace()
                     // reopenSerial()
                     return
@@ -252,5 +288,16 @@ class SerialHelper {
             }
         }
     }
+
+    private inner class SendRunnable : Runnable {
+        var bytes: ByteArray? = null
+        override fun run() {
+            // 如果 bytes 为 null，send 不会被调用；如果不为 null，自动解包并传入
+            bytes?.let { nonNullBytes ->
+                send(nonNullBytes)
+            }
+        }
+    }
+
 
 }

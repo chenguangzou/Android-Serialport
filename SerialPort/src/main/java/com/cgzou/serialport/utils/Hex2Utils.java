@@ -98,7 +98,7 @@ public class Hex2Utils {
      * @param src
      * @return
      */
-    public static String bytes2HexString(byte[] src, int len) {
+    public static String bytesToHex2String(byte[] src, int len) {
         StringBuilder stringBuilder = new StringBuilder("");
         if (src == null || src.length == 0 || len <= 0) {
             return null;
