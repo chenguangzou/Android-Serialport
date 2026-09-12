@@ -38,7 +38,7 @@ abstract class BufferParse {
      * @param bytes ByteArray?   字节数组
      * @param size Int           数据长度
      */
-    fun parse(bytes: ByteArray?, size: Int) {
+    protected fun parse(bytes: ByteArray?, size: Int) {
         putCache(bytes, size)
         val index = buffer.indexOf(frameHeader)
         if (index != -1) {
