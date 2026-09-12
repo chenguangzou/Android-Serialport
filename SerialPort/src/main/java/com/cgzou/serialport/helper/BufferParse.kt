@@ -38,7 +38,7 @@ abstract class BufferParse {
      * @param bytes ByteArray?   字节数组
      * @param size Int           数据长度
      */
-    protected fun parse(bytes: ByteArray?, size: Int) {
+    fun parse(bytes: ByteArray?, size: Int) {
         putCache(bytes, size)
         val index = buffer.indexOf(frameHeader)
         if (index != -1) {
@@ -56,13 +56,12 @@ abstract class BufferParse {
      */
     abstract fun doParse()
 
-
     /**
      * 2.添加字节数组到缓存，之后可以parse
      * @param bytes ByteArray?     字节数组
      * @param size Int             数据长度
      */
-    private fun putCache(bytes: ByteArray?, size: Int) {
+    protected fun putCache(bytes: ByteArray?, size: Int) {
         timeOutClean()
         // 是否开始解析
         if (!isParse) {
