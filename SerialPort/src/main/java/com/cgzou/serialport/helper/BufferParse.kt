@@ -61,7 +61,7 @@ abstract class BufferParse {
      * @param bytes ByteArray?     字节数组
      * @param size Int             数据长度
      */
-    protected fun putCache(bytes: ByteArray?, size: Int) {
+    protected open fun putCache(bytes: ByteArray?, size: Int) {
         timeOutClean()
         // 是否开始解析
         if (!isParse) {
